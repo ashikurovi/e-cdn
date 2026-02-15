@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -13,6 +14,9 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
     credentials: true,
   });
+
+  // Apply global exception filter
+  app.useGlobalFilters(new GlobalExceptionFilter());
 
   // Serve static files from uploads directory
   app.useStaticAssets(join(process.cwd(), 'uploads'), {
