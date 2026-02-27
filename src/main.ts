@@ -1,7 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { join } from 'path';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
@@ -26,9 +25,17 @@ async function createApp(): Promise<NestExpressApplication> {
     app.useGlobalFilters(new GlobalExceptionFilter());
 
     // Static files
-    app.useStaticAssets(join(process.cwd(), 'uploads'), {
-      prefix: '/uploads/',
-    });
+    if (process.env.NODE_ENV === 'production') {
+      // On Vercel / serverless, Multer saves files to `/tmp`
+      app.useStaticAssets('/tmp', {
+        prefix: '/uploads/',
+      });
+    } else {
+      // Local dev: serve from `./uploads` folder
+      app.useStaticAssets(process.cwd() + '/uploads', {
+        prefix: '/uploads/',
+      });
+    }
 
     await app.init();
 
