@@ -11,15 +11,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UploadController = void 0;
 const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
+const multer_1 = require("multer");
 const upload_service_1 = require("./upload.service");
-const upload_service_2 = require("./upload.service");
 let UploadController = class UploadController {
-    uploadService;
     constructor(uploadService) {
         this.uploadService = uploadService;
     }
@@ -27,15 +25,15 @@ let UploadController = class UploadController {
         if (!file) {
             throw new common_1.BadRequestException('No file uploaded');
         }
+        this.uploadService.validateFile(file);
         const protocol = req.protocol;
         const host = req.get('host');
         const baseUrl = `${protocol}://${host}`;
-        const publicUrl = this.uploadService.getPublicUrl(file.filename, baseUrl);
+        const publicUrl = await this.uploadService.getPublicUrlForBuffer(file, baseUrl);
         return {
             success: true,
             message: 'Image uploaded successfully',
             url: publicUrl,
-            filename: file.filename,
             originalName: file.originalname,
             size: file.size,
             mimetype: file.mimetype,
@@ -45,11 +43,25 @@ let UploadController = class UploadController {
 exports.UploadController = UploadController;
 __decorate([
     (0, common_1.Post)('image'),
-    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', upload_service_2.multerConfig)),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
+        storage: (0, multer_1.memoryStorage)(),
+        limits: {
+            fileSize: 10 * 1024 * 1024,
+        },
+        fileFilter: (req, file, callback) => {
+            const isValidMimeType = upload_service_1.allowedMimeTypes.includes(file.mimetype);
+            if (isValidMimeType) {
+                callback(null, true);
+            }
+            else {
+                callback(new common_1.BadRequestException(`Invalid file type. Only ${upload_service_1.allowedMimeTypes.join(', ')} are allowed.`), false);
+            }
+        },
+    })),
     __param(0, (0, common_1.UploadedFile)()),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_b = typeof Express !== "undefined" && (_a = Express.Multer) !== void 0 && _a.File) === "function" ? _b : Object, Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], UploadController.prototype, "uploadImage", null);
 exports.UploadController = UploadController = __decorate([

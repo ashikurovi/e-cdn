@@ -1,10 +1,6 @@
-export declare const multerConfig: {
-    storage: any;
-    fileFilter: (req: any, file: any, callback: any) => void;
-    limits: {
-        fileSize: number;
-    };
-};
+import type { Multer } from 'multer';
+export declare const allowedMimeTypes: string[];
 export declare class UploadService {
-    getPublicUrl(filename: string, baseUrl?: string): string;
+    validateFile(file: Multer.File): void;
+    getPublicUrlForBuffer(file: Multer.File, baseUrl?: string): Promise<string>;
 }
