@@ -30,7 +30,7 @@ export class UploadController {
     const host = req.get('host');
     const baseUrl = `${protocol}://${host}`;
 
-    const publicUrl = this.uploadService.getPublicUrl(file.filename, baseUrl);
+    const publicUrl = await this.uploadService.uploadImage(file, baseUrl);
 
     return {
       success: true,
